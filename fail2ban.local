@@ -1,0 +1,34 @@
+[DEFAULT]
+# Ban IP for 24 hours after multiple failures
+bantime = 86400
+
+# Time between failed attempts resets (default: 10m)
+findtime = 10m
+
+# Max retry attempts before banning
+maxretry = 5
+
+# Ban action (use `iptables` or `firewalld` depending on your system)
+banaction = iptables-multiport
+banaction_allports = iptables-allports
+
+# Email notifications (optional)
+destemail = your@email.com
+sender = fail2ban@yourserver.com
+mta = sendmail
+
+# Log level (INFO, DEBUG, WARNING, ERROR)
+loglevel = INFO
+logtarget = /var/log/fail2ban.log
+
+# Ignore local networks
+ignoreip = 127.0.0.1/8 192.168.1.0/24
+
+[sshd]
+enabled = true
+port = ssh
+filter = sshd
+logpath = /var/log/auth.log
+maxretry = 5
+findtime = 10m
+bantime = 86400
