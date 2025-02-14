@@ -45,4 +45,4 @@ EXPOSE 22 3000
 
 
 ##commands on enter
-CMD ["sh", "-c", "service ssh start && node /home/ubuntu/server.js"]
+CMD ["sh", "-c", "service ssh start && node /home/ubuntu/server.js && service fail2ban start"]

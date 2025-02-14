@@ -34,7 +34,7 @@ docker pull rajatbansalx86/ubuntu\_ssh\_secure\_server
     docker run -d --name secure-ssh \
     -p 2222:22  \
     -p 3000:3000 
-    rajatbansalx86/ubuntu\_ssh\_secure\_server
+    rajatbansalx86/ubuntu_ssh_secure_server
 
 This runs the SSH server inside a Docker container and exposes it on **port 2222** and give an express endpoint to download ssh keys at **/download-ssh-key at port 3000**
 
