@@ -1,0 +1,36 @@
+hostname: harbor.local
+http:
+  port: 80
+
+database:
+  type: external
+  external:
+    host: postgres
+    port: 5432
+    dbname: harbor
+    username: admin
+    password: strongpassword
+    sslmode: disable
+
+redis:
+  type: external
+  external:
+    addr: redis:6379
+    password: redis_password
+    db: 0
+
+distribution_service:
+  redis:
+    addr: redis:6379
+    password: redis_password
+    db: 1
+
+storage:
+  type: filesystem
+  filesystem:
+    rootdirectory: ./data/harbor-storage
+
+auth:
+  mode: db_auth
+
+data_volume: ./data/harbor

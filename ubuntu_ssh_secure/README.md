@@ -6,6 +6,8 @@
 
 This project provides a **containerized Ubuntu server** with **SSH access**, secured using multiple layers of protection, including **UFW, iptables, inactivity timeouts, and Fail2Ban**. The goal is to create a **hardened and minimal** SSH-accessible environment while allowing customization for further security enhancements.
 
+Read the `EXPLAIN.md` file to understand how the docker file works how to change default configs
+
 This project is **open for contributions**, aiming to improve security, configurations, and best practices in containerized environments.
 
 🚀 Features
@@ -84,3 +86,4 @@ This project is open-source and available under the **MIT License**.
 
 📧 Contact
 **Rajat Bansal** - _rajatbansal28082003@gmail.com_
+

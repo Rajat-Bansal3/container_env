@@ -15,7 +15,7 @@ WORKDIR /root
 COPY --from=server /app /home/ubuntu/
 
 RUN apt-get update && apt-get upgrade -y && \
-    apt-get install -y curl openssh-server fail2ban iptables-persistent sudo auditd && \
+    apt-get install -y curl openssh-server fail2ban iptables iptables-persistent sudo auditd && \
     curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
     apt-get install -y nodejs && apt-get install -y auditd && apt-get clean
 
@@ -48,15 +48,10 @@ RUN echo "net.ipv4.conf.all.rp_filter = 1" >> /etc/sysctl.conf && \
 
 RUN systemctl enable auditd
 
-RUN iptables -P INPUT DROP && \
-    iptables -P FORWARD DROP && \
-    iptables -P OUTPUT ACCEPT && \
-    iptables -A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT && \
-    iptables -A INPUT -i lo -j ACCEPT && \
-    iptables -A INPUT -p tcp --dport 443 -j ACCEPT && \
-    iptables -A INPUT -p tcp --dport 3000 -j ACCEPT && \
-    iptables-save > /etc/iptables/rules.v4 
+COPY entrypoint.sh /entrypoint.sh
+
+RUN chmod +x /entrypoint.sh
 
 EXPOSE 443 3000
 
-CMD ["sh", "-c", "service ssh start && service fail2ban start && iptables-restore < /etc/iptables/rules.v4 && node /home/ubuntu/server.js"]
+CMD ["sh", "-c", "service ssh start && /entrypoint.sh && service fail2ban start && iptables-restore < /etc/iptables/rules.v4 && node /home/ubuntu/server.js"]

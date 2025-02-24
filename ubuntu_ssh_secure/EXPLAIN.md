@@ -20,6 +20,15 @@ The server exposes the following endpoints:
 *   `**GET /current-sshd-config**` – Retrieve the current `sshd_config` settings.
     
 *   `**GET /current-fail2ban-config**` – Retrieve the current Fail2Ban configuration.
+
+## 🔧 Configuration Management via build
+
+*   `**entrypoint.sh**` - Modify this file to change default iptables configurations.
+  
+*   `**sshd.conf**` - Modify this file to change default sshd configurations  
+    
+*   `**fail2ban.local**` - Modify this file to change default fail2ban configurations  
+
     
 
 ### 🔑 SSH Key Management
@@ -49,7 +58,7 @@ The `Dockerfile` is responsible for setting up and securing the container enviro
     
 5.  **Applies system security configurations**, protecting against spoofing and odd network attacks.
     
-6.  **Configures iptables** for traffic management and security.
+6.  **Configures iptables** for traffic management and security via copying entrypoint.sh from repo to container to solve network build time issue.
     
 7.  **Exposes necessary ports**:
     

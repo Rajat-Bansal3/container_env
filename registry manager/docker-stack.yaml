@@ -1,0 +1,73 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:14
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: strongpassword
+      POSTGRES_DB: registry_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    networks:
+      - registry_network
+
+  redis:
+    image: redis:alpine
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    networks:
+      - registry_network
+
+  nexus:
+    image: sonatype/nexus3
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: strongpassword
+      POSTGRES_DB: registry_db
+      REDIS_URL: redis://redis:6379
+    volumes:
+      - nexus_data:/nexus-data
+    depends_on:
+      - redis
+      - postgres
+    networks:
+      - registry_network
+    ports:
+      - "8081:8081"
+
+  verdaccio:
+    image: verdaccio/verdaccio
+    deploy:
+      replicas: 3
+      restart_policy:
+        condition: on-failure
+    environment:
+      REDIS_URL: redis://redis:6379
+    volumes:
+      - verdaccio_data:/verdaccio/storage
+    depends_on:
+      - redis
+    networks:
+      - registry_network
+    ports:
+      - "4873:4873"
+
+volumes:
+  nexus_data:
+  verdaccio_data:
+  postgres_data:
+
+networks:
+  registry_network:
+    driver: overlay

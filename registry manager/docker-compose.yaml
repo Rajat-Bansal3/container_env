@@ -1,0 +1,167 @@
+version: "3.8"
+
+services:
+  # PostgreSQL for Nexus
+  postgres:
+    image: postgres:14
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: strongpassword
+      POSTGRES_DB: registry_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - registry_network
+
+  # Redis for caching
+  redis:
+    image: redis:alpine
+    restart: unless-stopped
+    networks:
+      - registry_network
+
+  # Nexus Repository Manager
+  nexus:
+    image: sonatype/nexus3
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: strongpassword
+      POSTGRES_DB: registry_db
+      REDIS_URL: redis://redis:6379
+    volumes:
+      - nexus_data:/nexus-data
+    depends_on:
+      - redis
+      - postgres
+    networks:
+      - registry_network
+    ports:
+      - "8081:8081"
+    restart: unless-stopped
+
+  # Verdaccio (Private NPM Registry)
+  verdaccio:
+    image: verdaccio/verdaccio
+    environment:
+      REDIS_URL: redis://redis:6379
+    volumes:
+      - verdaccio_data:/verdaccio/storage
+    depends_on:
+      - redis
+    networks:
+      - registry_network
+    ports:
+      - "4873:4873"
+    restart: unless-stopped
+
+  # Harbor Database
+  harbor-db:
+    image: postgres:14
+    environment:
+      POSTGRES_DB: registry
+      POSTGRES_USER: harbor
+      POSTGRES_PASSWORD: strongpassword
+    volumes:
+      - harbor_db:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - registry_network
+
+  # Harbor Core
+  harbor-core:
+    image: goharbor/harbor-core:v2.8.0
+    depends_on:
+      - redis
+      - harbor-db
+      - harbor-registry
+    environment:
+      _REDIS_URL_CORE: redis://redis:6379
+      POSTGRES_PASSWORD: strongpassword
+      POSTGRES_USER: harbor
+      POSTGRES_DB: registry
+    volumes:
+      - harbor_config:/etc/harbor
+    networks:
+      - registry_network
+    restart: unless-stopped
+
+  # Harbor Registry
+  harbor-registry:
+    image: goharbor/registry-photon:v2.8.0
+    volumes:
+      - harbor_registry:/storage
+    networks:
+      - registry_network
+    restart: unless-stopped
+
+  # Harbor Job Service
+  harbor-jobservice:
+    image: goharbor/harbor-jobservice:v2.8.0
+    depends_on:
+      - harbor-db
+      - redis
+    environment:
+      _REDIS_URL_JOB: redis://redis:6379
+      POSTGRES_PASSWORD: strongpassword
+      POSTGRES_USER: harbor
+      POSTGRES_DB: registry
+    volumes:
+      - harbor_config:/etc/jobservice
+    networks:
+      - registry_network
+    restart: unless-stopped
+
+  # Harbor Portal (UI)
+  harbor-portal:
+    image: goharbor/harbor-portal:v2.8.0
+    depends_on:
+      - harbor-core
+    networks:
+      - registry_network
+    restart: unless-stopped
+
+  # Harbor Notary Server (Optional)
+  harbor-notary:
+    image: goharbor/notary-server-photon:v2.8.0
+    depends_on:
+      - harbor-db
+    networks:
+      - registry_network
+    restart: unless-stopped
+
+  # Harbor Notary Signer (Optional)
+  harbor-notary-signer:
+    image: goharbor/notary-signer-photon:v2.8.0
+    depends_on:
+      - harbor-db
+    networks:
+      - registry_network
+    restart: unless-stopped
+
+  # Load Balancer (Exposes Services)
+  nginx:
+    image: nginx:alpine
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - nexus
+      - verdaccio
+      - harbor-portal
+    ports:
+      - "80:80"
+    networks:
+      - registry_network
+    restart: unless-stopped
+
+volumes:
+  nexus_data:
+  verdaccio_data:
+  postgres_data:
+  harbor_db:
+  harbor_registry:
+  harbor_config:
+
+networks:
+  registry_network:
+    driver: bridge
